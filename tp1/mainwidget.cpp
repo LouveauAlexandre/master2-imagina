@@ -79,6 +79,7 @@ void MainWidget::mousePressEvent(QMouseEvent *e)
     mousePressPosition = QVector2D(e->localPos());
 }
 
+
 void MainWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     // Mouse release position - mouse press position
@@ -218,5 +219,20 @@ void MainWidget::paintGL()
     program.setUniformValue("texture", 0);
 
     // Draw cube geometry
-    geometries->drawCubeGeometry(&program);
+    geometries->drawPlaneGeometry(&program);
+}
+
+void MainWidget::keyPressEvent(QKeyEvent *e) {
+    if (e->key() == Qt::Key_Escape)
+        std::exit(0);
+
+    //Reception des inputs
+    float _x = (float)(e->key() == Qt::Key_Right || e->key() == Qt::Key_D) - (float)(e->key() == Qt::Key_Left || e->key() == Qt::Key_Q);
+    float _y = (float)(e->key() == Qt::Key_Up    || e->key() == Qt::Key_Z) - (float)(e->key() == Qt::Key_Down || e->key() == Qt::Key_S);
+
+    posx += _x/10.f;
+    posy += _y/10.f;
+
+    update(); //Il faut mettre a jour la scene !
+
 }
