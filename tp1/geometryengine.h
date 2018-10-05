@@ -63,10 +63,14 @@ public:
 
     void drawCubeGeometry(QOpenGLShaderProgram *program);
     void drawPlaneGeometry(QOpenGLShaderProgram *program);
+    void drawPlaneGeometry2(QOpenGLShaderProgram *program);
 
 private:
     void initCubeGeometry();
     void initPlaneGeometry();
+    void initPlaneGeometry2();
+    float random(float max);
+
     QOpenGLBuffer arrayBuf;
     QOpenGLBuffer indexBuf;
 };

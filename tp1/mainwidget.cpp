@@ -51,6 +51,7 @@
 #include "mainwidget.h"
 
 #include <QMouseEvent>
+#include <QKeyEvent>
 
 #include <math.h>
 
@@ -58,7 +59,10 @@ MainWidget::MainWidget(QWidget *parent) :
     QOpenGLWidget(parent),
     geometries(0),
     texture(0),
-    angularSpeed(0)
+    angularSpeed(0),
+    posX(0.f),
+    posY(0.f),
+    posZ(-5.f)
 {
 }
 
@@ -188,7 +192,7 @@ void MainWidget::resizeGL(int w, int h)
     qreal aspect = qreal(w) / qreal(h ? h : 1);
 
     // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
-    const qreal zNear = 3.0, zFar = 7.0, fov = 45.0;
+    const qreal zNear = 3.0, zFar = 30.0, fov = 45.0;
 
     // Reset projection
     projection.setToIdentity();
@@ -208,7 +212,7 @@ void MainWidget::paintGL()
 //! [6]
     // Calculate model view transformation
     QMatrix4x4 matrix;
-    matrix.translate(0.0, 0.0, -5.0);
+    matrix.translate(posX, posY, posZ);
     matrix.rotate(rotation);
 
     // Set modelview-projection matrix
@@ -219,19 +223,42 @@ void MainWidget::paintGL()
     program.setUniformValue("texture", 0);
 
     // Draw cube geometry
-    geometries->drawPlaneGeometry(&program);
+    //geometries->drawCubeGeometry(&program);
+    //geometries->drawPlaneGeometry(&program);
+    geometries->drawPlaneGeometry2(&program);
 }
 
 void MainWidget::keyPressEvent(QKeyEvent *e) {
-    if (e->key() == Qt::Key_Escape)
-        std::exit(0);
-
-    //Reception des inputs
-    float _x = (float)(e->key() == Qt::Key_Right || e->key() == Qt::Key_D) - (float)(e->key() == Qt::Key_Left || e->key() == Qt::Key_Q);
-    float _y = (float)(e->key() == Qt::Key_Up    || e->key() == Qt::Key_Z) - (float)(e->key() == Qt::Key_Down || e->key() == Qt::Key_S);
-
-    posx += _x/10.f;
-    posy += _y/10.f;
+    switch (e->key()) {
+    case Qt::Key_Up:
+    case Qt::Key_Z:
+        posY += 1.f/10.f;
+        break;
+    case Qt::Key_Down:
+    case Qt::Key_S:
+        posY -= 1.f/10.f;
+        break;
+    case Qt::Key_Left:
+    case Qt::Key_Q:
+        posX -= 1.f/10.f;
+        break;
+    case Qt::Key_Right:
+    case Qt::Key_D:
+        posX += 1.f/10.f;
+        break;
+    case Qt::Key_Plus:
+    case Qt::Key_A:
+        posZ -= 1.f/10.f;
+        break;
+    case Qt::Key_Minus:
+    case Qt::Key_E:
+        posZ += 1.f/10.f;
+        break;
+    case Qt::Key_Escape:
+        std::exit(EXIT_SUCCESS);
+    default:
+        break;
+    }
 
     update(); //Il faut mettre a jour la scene !
 

@@ -72,7 +72,8 @@ GeometryEngine::GeometryEngine()
 
     // Initializes cube geometry and transfers it to VBOs
     //initCubeGeometry();
-    initPlaneGeometry();
+    //initPlaneGeometry();
+    initPlaneGeometry2();
 }
 
 GeometryEngine::~GeometryEngine()
@@ -229,6 +230,75 @@ void GeometryEngine::initPlaneGeometry()
     indexBuf.allocate(indices, 29 * sizeof(GLushort));
 }
 
+float GeometryEngine::random(float max) {
+    return static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/ max));
+}
+
+void GeometryEngine::initPlaneGeometry2() {
+    int sommets = 16;
+    int faces = sommets * sommets;
+    VertexData vertices[faces * 4];
+
+    float x = 0, y = 0;
+    float max_z = 2;
+    int sommet_courant = 0, face_courante = 0;
+    while(face_courante < faces) {
+        //Départ
+        if(x == 0 && y == 0) {
+            vertices[sommet_courant + 0] = {QVector3D(x    , y    , random(max_z)), QVector2D(0.0f, 0.0f)};
+            vertices[sommet_courant + 1] = {QVector3D(x + 1, y    , random(max_z)), QVector2D(1.0f, 0.0f)};
+            vertices[sommet_courant + 2] = {QVector3D(x    , y + 1, random(max_z)), QVector2D(0.0f, 1.0f)};
+            vertices[sommet_courant + 3] = {QVector3D(x + 1, y + 1, random(max_z)), QVector2D(1.0f, 1.0f)};
+        } else if ( x != 0 && y == 0 ) { //Première ligne
+            vertices[sommet_courant + 0] = {QVector3D(vertices[sommet_courant - 3].position), QVector2D(0.0f, 0.0f)};
+            vertices[sommet_courant + 1] = {QVector3D(x + 1, y    , random(max_z)), QVector2D(1.0f, 0.0f)};
+            vertices[sommet_courant + 2] = {QVector3D(vertices[sommet_courant - 1].position), QVector2D(0.0f, 1.0f)};
+            vertices[sommet_courant + 3] = {QVector3D(x + 1, y + 1, random(max_z)), QVector2D(1.0f, 1.0f)};
+        } else if ( x == 0 && y != 0) { //Première colonne
+            vertices[sommet_courant + 0] = {QVector3D(vertices[( (int) y - 1) * sommets * 4 + 2 + 4 * (int) x].position), QVector2D(0.0f, 0.0f)};
+            vertices[sommet_courant + 1] = {QVector3D(vertices[( (int) y - 1) * sommets * 4 + 3 + 4 * (int) x].position), QVector2D(1.0f, 0.0f)};
+            vertices[sommet_courant + 2] = {QVector3D(x    , y + 1, random(max_z)), QVector2D(0.0f, 1.0f)};
+            vertices[sommet_courant + 3] = {QVector3D(x + 1, y + 1, random(max_z)), QVector2D(1.0f, 1.0f)};
+        } else { //Le reste
+            vertices[sommet_courant + 0] = {QVector3D(vertices[sommet_courant - 3].position), QVector2D(0.0f, 0.0f)};
+            vertices[sommet_courant + 1] = {QVector3D(vertices[( (int) y - 1) * sommets * 4 + 3 + 4 * (int) x].position), QVector2D(1.0f, 0.0f)};
+            vertices[sommet_courant + 2] = {QVector3D(vertices[sommet_courant - 1].position), QVector2D(0.0f, 1.0f)};
+            vertices[sommet_courant + 3] = {QVector3D(x + 1, y + 1, random(max_z)), QVector2D(1.0f, 1.0f)};
+        }
+        x++;
+        if( x == sommets ) {
+            x = 0; y++;
+        }
+        sommet_courant += 4; face_courante++;
+    }
+
+    const int nb_indices = faces * 4 + faces * 2 - 2;
+    GLushort indices[nb_indices] = {0};
+
+    int sommet = 0;
+    for (int i = 0 ; i < nb_indices; i += 6) {
+        indices[i + 0] = sommet++;
+        indices[i + 1] = sommet++;
+        indices[i + 2] = sommet++;
+        indices[i + 3] = sommet;
+
+        if(i < nb_indices - 6) {
+            indices[i + 4] = sommet++;
+            indices[i + 5] = sommet;
+        }
+
+    }
+
+    // Transfer vertex data to VBO 0
+    arrayBuf.bind();
+    arrayBuf.allocate(vertices, faces * 4 * sizeof(VertexData));
+
+    // Transfer index data to VBO 1
+    indexBuf.bind();
+    indexBuf.allocate(indices, nb_indices * sizeof(GLushort));
+}
+
+
 void GeometryEngine::drawPlaneGeometry(QOpenGLShaderProgram *program)
 {
     // Tell OpenGL which VBOs to use
@@ -253,4 +323,30 @@ void GeometryEngine::drawPlaneGeometry(QOpenGLShaderProgram *program)
 
     // Draw cube geometry using indices from VBO 1
     glDrawElements(GL_TRIANGLE_STRIP, 29, GL_UNSIGNED_SHORT, 0);
+}
+
+void GeometryEngine::drawPlaneGeometry2(QOpenGLShaderProgram *program)
+{
+    // Tell OpenGL which VBOs to use
+    arrayBuf.bind();
+    indexBuf.bind();
+
+    // Offset for position
+    quintptr offset = 0;
+
+    // Tell OpenGL programmable pipeline how to locate vertex position data
+    int vertexLocation = program->attributeLocation("a_position");
+    program->enableAttributeArray(vertexLocation);
+    program->setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3, sizeof(VertexData));
+
+    // Offset for texture coordinate
+    offset += sizeof(QVector3D);
+
+    // Tell OpenGL programmable pipeline how to locate vertex texture coordinate data
+    int texcoordLocation = program->attributeLocation("a_texcoord");
+    program->enableAttributeArray(texcoordLocation);
+    program->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
+
+    // Draw cube geometry using indices from VBO 1
+    glDrawElements(GL_TRIANGLE_STRIP, 1534, GL_UNSIGNED_SHORT, 0);
 }
