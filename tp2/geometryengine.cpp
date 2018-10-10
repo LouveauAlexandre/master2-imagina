@@ -52,6 +52,8 @@
 
 #include <QVector2D>
 #include <QVector3D>
+#include <QImage>
+#include <iostream>
 
 struct VertexData
 {
@@ -82,46 +84,58 @@ GeometryEngine::~GeometryEngine()
 
 void GeometryEngine::initPlaneGeometry()
 {
-    // Create array of 16 x 16 vertices facing the camera  (z=cte)
-    VertexData vertices[16*16];
+    QImage heightMap;
 
-    for (int i=0;i<16;i++)
-        for (int j=0;j<16;j++)
+    if(!heightMap.load("heightmap-1.png")) {
+            std::cerr << "Error : no such file." << std::endl;
+            return;
+    }
+
+    int height = heightMap.height(), width = heightMap.width();
+
+    int size = 64;
+
+    // Create array of 16 x 16 vertices facing the camera  (z=cte)
+    VertexData vertices[size*size];
+
+    for (int i=0;i<size;i++)
+        for (int j=0;j<size;j++)
             {
                 // Vertex data for face 0
-                vertices[16*i+j] = { QVector3D(0.1*(i-8),0.1*(j-8), 2), QVector2D(0.33*i/16.0,0.5*j/16.0)};
+                vertices[size*i+j] = { QVector3D(0.1*(i-size/2),0.1*(j-size/2), (float) qGray(heightMap.pixel(height / size * i, width / size * j)) / 255.0 * 1.5 + 1.5), QVector2D((float)i/size,(float)j/size)};
                 // add height field eg (i-8)*(j-8)/256.0
         }
 
-
     // Draw 15 bands each with 32 vertices, with repeated vertices at the end of each band
-    GLushort indices[15*36];
+    int nbv = size * 2 + 4;
+        taille_vertices = nbv * (size - 1);
+        GLushort indices[(size - 1) * nbv];
 
-    for (int i=0;i<15;i++)
-        {
-            indices[36*i] = 16*i;
-            indices[36*i+1] = 16*i;
+        for (int i=0;i<size-1;i++)
+            {
+                indices[nbv*i] = size*i;
+                indices[nbv*i+1] = size*i;
 
-            for (int j=2;j<34;j+=2)
-                {
-                    indices[36*i+j] = 16*i +(j-2)/2;
-                    indices[36*i+j+1] = 16*(i+1) + (j-2)/2;
-                }
+                for (int j=2;j<nbv;j+=2)
+                    {
+                        indices[nbv*i+j] = size*i +(j-2)/2;
+                        indices[nbv*i+j+1] = size*(i+1) + (j-2)/2;
+                    }
 
-            indices[36*i+34] = 16*(i+1) + 15;
-            indices[36*i+35] = 16*(i+1) + 15;
+                indices[nbv*i+nbv - 2] = size*(i+1) + size - 1;
+                indices[nbv*i+nbv - 1] = size*(i+1) + size - 1;
+        }
+
+    //! [1]
+        // Transfer vertex data to VBO 0
+        arrayBuf.bind();
+        arrayBuf.allocate(vertices, size*size * sizeof(VertexData));
+
+        // Transfer index data to VBO 1
+        indexBuf.bind();
+        indexBuf.allocate(indices, (size - 1) * nbv * sizeof(GLushort));
+    //! [1]
     }
-
-//! [1]
-    // Transfer vertex data to VBO 0
-    arrayBuf.bind();
-    arrayBuf.allocate(vertices, 16*16 * sizeof(VertexData));
-
-    // Transfer index data to VBO 1
-    indexBuf.bind();
-    indexBuf.allocate(indices, 15*36 * sizeof(GLushort));
-//! [1]
-}
 
 //void GeometryEngine::initPlaneGeometry()
 //{
@@ -218,6 +232,6 @@ void GeometryEngine::drawPlaneGeometry(QOpenGLShaderProgram *program)
     program->setAttributeBuffer(texcoordLocation, GL_FLOAT, offset, 2, sizeof(VertexData));
 
     // Draw plane geometry using indices from VBO 1
-    glDrawElements(GL_TRIANGLE_STRIP, 15*36, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLE_STRIP, taille_vertices, GL_UNSIGNED_SHORT, 0);
 }
 //! [2]

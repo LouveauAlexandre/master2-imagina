@@ -69,7 +69,7 @@ class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
     Q_OBJECT
 
 public:
-    explicit MainWidget(QWidget *parent = 0);
+    explicit MainWidget(int fps, QWidget *parent = 0);
     ~MainWidget();
 
 protected:
@@ -80,6 +80,7 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
+    void keyPressEvent(QKeyEvent *e);
 
     void initShaders();
     void initTextures();
@@ -95,8 +96,10 @@ private:
 
     QVector2D mousePressPosition;
     QVector3D rotationAxis;
-    qreal angularSpeed;
+     qreal angularSpeed;
     QQuaternion rotation;
+    int fps;
+    static float speedChange = 0.0;
 };
 
 #endif // MAINWIDGET_H

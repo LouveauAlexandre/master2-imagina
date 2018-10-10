@@ -68,6 +68,8 @@ private:
 
     QOpenGLBuffer arrayBuf;
     QOpenGLBuffer indexBuf;
+
+    unsigned int taille_vertices;
 };
 
 #endif // GEOMETRYENGINE_H
