@@ -64,6 +64,8 @@
 
 class GeometryEngine;
 
+static float speedChange = 1.0;
+
 class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -96,10 +98,9 @@ private:
 
     QVector2D mousePressPosition;
     QVector3D rotationAxis;
-     qreal angularSpeed;
+    qreal angularSpeed;
     QQuaternion rotation;
     int fps;
-    static float speedChange = 0.0;
 };
 
 #endif // MAINWIDGET_H

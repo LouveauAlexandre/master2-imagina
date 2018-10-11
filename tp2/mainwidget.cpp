@@ -58,8 +58,8 @@ MainWidget::MainWidget(int fps, QWidget *parent) :
     QOpenGLWidget(parent),
     geometries(0),
     texture(0),
-    angularSpeed(1),
     rotationAxis(0, 0, 1),
+    angularSpeed(1),
     fps(fps)
 {
 }
@@ -112,7 +112,8 @@ void MainWidget::timerEvent(QTimerEvent *)
     //    angularSpeed = 0.0;
     //} else {
         // Update rotation
-        rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
+    angularSpeed = speedChange;
+    rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
 
         // Request an update
         update();
@@ -140,7 +141,7 @@ void MainWidget::initializeGL()
     geometries = new GeometryEngine;
 
     // Use QBasicTimer because its faster than QTimer
-    timer.start(fps, this);
+    timer.start((float)(1000.0 / fps), this);
 }
 
 //! [3]
