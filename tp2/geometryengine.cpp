@@ -86,7 +86,7 @@ void GeometryEngine::initPlaneGeometry()
 {
     QImage heightMap;
 
-    if(!heightMap.load(":/heightmap-1.png")) {
+    if(!heightMap.load("heightmap-1.png")) {
             std::cerr << "Error : no such file." << std::endl;
             return;
     }

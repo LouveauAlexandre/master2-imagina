@@ -54,22 +54,33 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QImage>
+
+struct VertexData
+{
+    QVector3D position;
+    QVector2D texCoord;
+};
 
 class GeometryEngine : protected QOpenGLFunctions
 {
 public:
+    unsigned static int height;
+    unsigned static int width;
+    static QImage heightMap;
     GeometryEngine();
     virtual ~GeometryEngine();
-
+    void initQuadTree();
     void drawPlaneGeometry(QOpenGLShaderProgram *program);
+    void drawQuadTree(QOpenGLShaderProgram *program);
 
 private:
     void initPlaneGeometry();
-
     QOpenGLBuffer arrayBuf;
     QOpenGLBuffer indexBuf;
 
     unsigned int taille_vertices;
+    unsigned int taille_indices;
 };
 
 #endif // GEOMETRYENGINE_H

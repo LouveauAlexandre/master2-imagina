@@ -54,14 +54,13 @@
 
 #include <math.h>
 
-MainWidget::MainWidget(int fps, Season season, QWidget *parent) :
+MainWidget::MainWidget(int fps, QWidget *parent) :
     QOpenGLWidget(parent),
     geometries(0),
     texture(0),
     rotationAxis(0, 0, 1),
     angularSpeed(1),
-    fps(fps),
-    season(season)
+    fps(fps)
 {
 }
 
@@ -170,7 +169,7 @@ void MainWidget::initShaders()
 void MainWidget::initTextures()
 {
     // Load cube.png image
-    texture = new QOpenGLTexture(QImage(":/heightmap-1.png"));//.mirrored());
+    texture = new QOpenGLTexture(QImage("heightmap-1.png"));//.mirrored());
 
     // Set nearest filtering mode for texture minification
     texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -249,5 +248,5 @@ void MainWidget::keyPressEvent(QKeyEvent *e) {
         std::exit(EXIT_SUCCESS);
     default:
         break;
-    }    
+    }
 }

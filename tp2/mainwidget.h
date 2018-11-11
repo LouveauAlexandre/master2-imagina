@@ -66,14 +66,12 @@ class GeometryEngine;
 
 static float speedChange = 1.0;
 
-enum class Season { Printemps, Ete, Automne, Hiver };
-
 class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
-    explicit MainWidget(int fps, Season season, QWidget *parent = 0);
+    explicit MainWidget(int fps, QWidget *parent = 0);
     ~MainWidget();
 
 protected:
@@ -90,7 +88,6 @@ protected:
     void initTextures();
 
 private:
-    void updateSeason();
     QBasicTimer timer;
     QOpenGLShaderProgram program;
     GeometryEngine *geometries;
@@ -104,12 +101,6 @@ private:
     qreal angularSpeed;
     QQuaternion rotation;
     int fps;
-    Season season;
-
-
-    public slots:
-        void nextSeason();
-
 };
 
 #endif // MAINWIDGET_H

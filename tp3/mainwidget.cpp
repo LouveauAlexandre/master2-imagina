@@ -49,19 +49,28 @@
 ****************************************************************************/
 
 #include "mainwidget.h"
+#include "quadnode.h"
 
 #include <QMouseEvent>
 
 #include <math.h>
 
-MainWidget::MainWidget(int fps, QWidget *parent) :
+double MainWidget::speedChange = .0;
+Camera MainWidget::camera = Camera(.0f, .0f, 5.f);
+
+MainWidget::MainWidget(int fps, Season season, QWidget *parent) :
     QOpenGLWidget(parent),
-    geometries(0),
-    texture(0),
+    geometries(nullptr),
+    texture(nullptr),
     rotationAxis(0, 0, 1),
     angularSpeed(1),
-    fps(fps)
+    fps(fps),
+    season(season),
+    gravity(.05f)
 {
+    resize(1280, 720);
+    setMouseTracking(true);
+    updateSeason();
 }
 
 MainWidget::~MainWidget()
@@ -91,15 +100,25 @@ void MainWidget::mouseReleaseEvent(QMouseEvent *e)
     QVector3D n = QVector3D(0.0,0.0,1.0).normalized();
 
     // Accelerate angular speed relative to the length of the mouse sweep
-    qreal acc = diff.length() / 100.0;
+    qreal acc = static_cast<double>(diff.length()) / 100.0;
 
     // Calculate new rotation axis as weighted sum
-    rotationAxis = (rotationAxis * angularSpeed + n * acc).normalized();
+    rotationAxis = (rotationAxis * static_cast<float>(angularSpeed) + n * static_cast<float>(acc)).normalized();
 
     // Increase angular speed
     angularSpeed += acc;
 }
 //! [0]
+
+void MainWidget::mouseMoveEvent(QMouseEvent *e)
+{
+    QPoint center = mapToGlobal(QPoint(width() / 2.f, height() / 2.f));
+    camera.processMouseMovement(width() / 2.f - e->pos().x(), height() / 2.f - e->pos().y());
+    QCursor c = cursor();
+    c.setPos(center);
+    c.setShape(Qt::BlankCursor);
+    setCursor(c);
+}
 
 //! [1]
 void MainWidget::timerEvent(QTimerEvent *)
@@ -113,7 +132,7 @@ void MainWidget::timerEvent(QTimerEvent *)
     //} else {
         // Update rotation
     angularSpeed = speedChange;
-    rotation = QQuaternion::fromAxisAndAngle(rotationAxis, angularSpeed) * rotation;
+    rotation = QQuaternion::fromAxisAndAngle(rotationAxis, static_cast<float>(angularSpeed)) * rotation;
 
         // Request an update
         update();
@@ -126,6 +145,7 @@ void MainWidget::initializeGL()
     initializeOpenGLFunctions();
 
     glClearColor(0, 0, 0, 1);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     initShaders();
     initTextures();
@@ -141,7 +161,7 @@ void MainWidget::initializeGL()
     geometries = new GeometryEngine;
 
     // Use QBasicTimer because its faster than QTimer
-    timer.start((float)(1000.0 / fps), this);
+    timer.start((1000 / fps), this);
 }
 
 //! [3]
@@ -169,7 +189,7 @@ void MainWidget::initShaders()
 void MainWidget::initTextures()
 {
     // Load cube.png image
-    texture = new QOpenGLTexture(QImage("heightmap-1.png"));//.mirrored());
+    texture = new QOpenGLTexture(QImage(":/heightmap-1.png"));//.mirrored());
 
     // Set nearest filtering mode for texture minification
     texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -190,13 +210,13 @@ void MainWidget::resizeGL(int w, int h)
     qreal aspect = qreal(w) / qreal(h ? h : 1);
 
     // Set near plane to 1.0, far plane to 10.0, field of view 45 degrees
-    const qreal zNear = 1.0, zFar = 100.0, fov = 45.0;
+    const qreal zNear = 1.0, zFar = 1000.0, fov = 45.0;
 
     // Reset projection
     projection.setToIdentity();
 
     // Set perspective projection
-    projection.perspective(fov, aspect, zNear, zFar);
+    projection.perspective(fov, static_cast<float>(aspect), zNear, zFar);
 }
 //! [5]
 
@@ -211,42 +231,130 @@ void MainWidget::paintGL()
     // Calculate model view transformation
     QMatrix4x4 matrix;
 
-    matrix.translate(0.0, 0.0, -12.0);
+    matrix.translate(posX, posY, posZ);
 
     QQuaternion framing = QQuaternion::fromAxisAndAngle(QVector3D(1,0,0),-45.0);
     matrix.rotate(framing);
 
-    matrix.translate(0.0, -1.8, 0.0);
+    matrix.translate(0.f, -1.8f, 0.f);
 
     // QVector3D eye = QVector3D(0.0,0.5,-5.0);
     // QVector3D center = QVector3D(0.0,0.0,2.0);
     // QVector3D up = QVector3D(-1,0,0);
     // matrix.lookAt(eye,center,up);
 
+    //camera.ApplyGravity(gravity);
+    //if (camera.getY() < .0f) camera.setY(.0f);
+
     matrix.rotate(rotation);
 
+    program.setUniformValue("a_color", groundColor);
+    autoMovePoint();
+    geometries->initQuadTree();
 
     // Set modelview-projection matrix
-    program.setUniformValue("mvp_matrix", projection * matrix);
+    program.setUniformValue("m_matrix", matrix);
+    program.setUniformValue("v_matrix", camera.getViewMatrix());
+    program.setUniformValue("p_matrix", projection);
+
+
 
     // Use texture unit 0 which contains cube.png
     program.setUniformValue("texture", 0);
 
     // Draw cube geometry
-    geometries->drawPlaneGeometry(&program);
+    //geometries->drawPlaneGeometry(&program);
+    geometries->drawQuadTree(&program);
 }
 
 void MainWidget::keyPressEvent(QKeyEvent *e) {
     switch (e->key()) {
-    case Qt::Key_Up:
+    case Qt::Key_Plus:
         speedChange += 0.1;
         break;
-    case Qt::Key_Down:
+    case Qt::Key_Minus:
         speedChange -= 0.1;
+        break;
+    case Qt::Key_Up:
+        QuadNode::p.setY(QuadNode::p.y() + .1f);
+        break;
+    case Qt::Key_Z:
+        camera.processMovement(Direction::FORWARD, .1f);
+        break;
+    case Qt::Key_Down:
+        QuadNode::p.setY(QuadNode::p.y() - .1f);
+        break;
+    case Qt::Key_S:
+        camera.processMovement(Direction::BACKWARD, .1f);
+        break;
+    case Qt::Key_Left:
+        QuadNode::p.setX(QuadNode::p.x() - .1f);
+        break;
+    case Qt::Key_Q:
+        camera.processMovement(Direction::LEFT, .1f);
+        break;
+    case Qt::Key_Right:
+        QuadNode::p.setX(QuadNode::p.x() + .1f);
+        break;
+    case Qt::Key_D:
+        camera.processMovement(Direction::RIGHT, .1f);
+        break;
+    case Qt::Key_A:
+        posZ -= 1.f/10.f;
+        break;
+    case Qt::Key_E:
+        posZ += 1.f/10.f;
+        break;
+    case Qt::Key_Space:
+        camera.processMovement(Direction::UP, 3.f);
         break;
     case Qt::Key_Escape:
         std::exit(EXIT_SUCCESS);
     default:
         break;
+    }
+}
+
+void MainWidget::nextSeason() {
+    switch (season)
+    {
+        case Season::Printemps:
+            season = Season::Ete;
+            break;
+        case Season::Ete:
+            season = Season::Automne;
+            break;
+        case Season::Automne:
+            season = Season::Hiver;
+        break;
+        case Season::Hiver:
+            season = Season::Printemps;
+        break;
+    };
+    updateSeason();
+
+}
+
+void MainWidget::updateSeason() {
+    switch (season)
+    {
+        case Season::Printemps:
+            setWindowTitle("Printemps");
+            groundColor = QVector4D(0.9f,1.f,0.5f,1.f);
+            break;
+
+        case Season::Ete:
+            setWindowTitle("Été");
+            groundColor = QVector4D(0.9f,0.8f,0.1f,1.f);
+            break;
+
+        case Season::Automne:
+            setWindowTitle("Automne");
+            groundColor = QVector4D(1.f,0.5f,0.1f,1.f);
+            break;
+
+        case Season::Hiver:
+            setWindowTitle("Hiver");
+            groundColor = QVector4D(1.f,1.f,1.f,1.f);
     }
 }
