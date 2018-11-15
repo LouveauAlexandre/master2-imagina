@@ -189,7 +189,7 @@ void MainWidget::initShaders()
 void MainWidget::initTextures()
 {
     // Load cube.png image
-    texture = new QOpenGLTexture(QImage(":/heightmap-1.png"));//.mirrored());
+    texture = new QOpenGLTexture(QImage(":/blanc.png").mirrored());
 
     // Set nearest filtering mode for texture minification
     texture->setMinificationFilter(QOpenGLTexture::Nearest);

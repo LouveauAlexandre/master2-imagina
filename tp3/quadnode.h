@@ -9,7 +9,7 @@
 
 VertexData *getVertices();
 int clamp(int num, int min, int max);
-int distance(QVector3D p, float x, float y, float size_x, float size_y);
+float distance(QVector3D p, float x, float y, float size_x, float size_y);
 void autoMovePoint();
 
 class QuadNode
@@ -21,7 +21,7 @@ public:
     int iteration(VertexData *vertices, int index);
     int static nb_vertices;
     float static width, height;
-    float static startx, starty, size;
+    float static startx, starty, size, maxDist;
     QVector3D static p;
 
 

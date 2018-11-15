@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "camera.h"
 #include <QtMath>
 
 Camera::Camera(float x, float y, float z, float pitch, float yaw)

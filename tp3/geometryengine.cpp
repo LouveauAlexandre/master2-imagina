@@ -160,7 +160,7 @@ void GeometryEngine::initQuadTree()
     // Draw 15 bands each with 32 vertices, with repeated vertices at the end of each band
     taille_indices = QuadNode::nb_vertices * 6;
     GLushort *indices = new GLushort[taille_indices];
-//    std::cout << "taille vertices = " << taille_vertices << "\ntaille indice = " << taille_indices << std::endl;
+//    std::cerr << "taille vertices = " << taille_vertices << "\ntaille indice = " << taille_indices << std::endl;
     for(int i = 0, j = 0; i < taille_indices; i += 6, j += 4)
     {
         //horaire

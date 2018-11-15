@@ -54,12 +54,12 @@
 
 #ifndef QT_NO_OPENGL
 #include "mainwidget.h"
+#include "quadnode.h"
 #endif
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
     QSurfaceFormat::setDefaultFormat(format);
@@ -68,8 +68,7 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("0.1");
 
 #ifndef QT_NO_OPENGL
-
-    MainWidget widgetPrintemps(30, Season::Printemps);
+    MainWidget widgetPrintemps(60, Season::Printemps);
 /*    MainWidget widgetEte(60, Season::Ete);
     MainWidget widgetAutomne(60, Season::Automne);
     MainWidget widgetHiver(60, Season::Hiver);
