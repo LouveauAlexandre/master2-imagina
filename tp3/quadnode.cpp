@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 
+int QuadNode::startDepth = 8;
 float QuadNode::width = 20.f;
 float QuadNode::height = width;
 int QuadNode::nb_vertices;
@@ -152,7 +153,7 @@ void QuadNode::delQuadNode()
 
 VertexData *getVertices()
 {
-    QuadNode *root = new QuadNode(.0f, .0f, QuadNode::width, QuadNode::height, 8);
+    QuadNode *root = new QuadNode(.0f, .0f, QuadNode::width, QuadNode::height, QuadNode::startDepth);
     VertexData *vertices = new VertexData[QuadNode::nb_vertices * 4];
 //    std::cout << "nb_vertices = " << QuadNode::nb_vertices << std::endl;
     int index = 0;

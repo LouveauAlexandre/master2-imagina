@@ -56,7 +56,7 @@
 #include <math.h>
 
 double MainWidget::speedChange = .0;
-Camera MainWidget::camera = Camera(.0f, .0f, 5.f);
+Camera MainWidget::camera = Camera(.0f, .0f, 20.f);
 
 MainWidget::MainWidget(int fps, Season season, QWidget *parent) :
     QOpenGLWidget(parent),
@@ -189,7 +189,8 @@ void MainWidget::initShaders()
 void MainWidget::initTextures()
 {
     // Load cube.png image
-    texture = new QOpenGLTexture(QImage(":/blanc.png").mirrored());
+    //texture = new QOpenGLTexture(QImage(":/heightmap-1.png"));//.mirrored());
+    texture = new QOpenGLTexture(QImage(":/blanc.png"));//.mirrored());
 
     // Set nearest filtering mode for texture minification
     texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -250,7 +251,6 @@ void MainWidget::paintGL()
 
     program.setUniformValue("a_color", groundColor);
     autoMovePoint();
-    geometries->initQuadTree();
 
     // Set modelview-projection matrix
     program.setUniformValue("m_matrix", matrix);
@@ -263,8 +263,12 @@ void MainWidget::paintGL()
     program.setUniformValue("texture", 0);
 
     // Draw cube geometry
+    makeCurrent();
     //geometries->drawPlaneGeometry(&program);
+    geometries->initQuadTree();
     geometries->drawQuadTree(&program);
+    doneCurrent();
+
 }
 
 void MainWidget::keyPressEvent(QKeyEvent *e) {

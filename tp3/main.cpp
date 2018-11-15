@@ -69,24 +69,24 @@ int main(int argc, char *argv[])
 
 #ifndef QT_NO_OPENGL
     MainWidget widgetPrintemps(60, Season::Printemps);
-/*    MainWidget widgetEte(60, Season::Ete);
+    MainWidget widgetEte(60, Season::Ete);
     MainWidget widgetAutomne(60, Season::Automne);
     MainWidget widgetHiver(60, Season::Hiver);
-*/
+
 
     widgetPrintemps.show();
-/*    widgetEte.show();
+    widgetEte.show();
     widgetAutomne.show();
     widgetHiver.show();
-*/
+
 
     QTimer *seasonTimer = new QTimer;
 
     QObject::connect(seasonTimer, SIGNAL(timeout()), &widgetPrintemps, SLOT(nextSeason()));
-/*    QObject::connect(seasonTimer, SIGNAL(timeout()), &widgetEte, SLOT(nextSeason()));
+    QObject::connect(seasonTimer, SIGNAL(timeout()), &widgetEte, SLOT(nextSeason()));
     QObject::connect(seasonTimer, SIGNAL(timeout()), &widgetAutomne, SLOT(nextSeason()));
     QObject::connect(seasonTimer, SIGNAL(timeout()), &widgetHiver, SLOT(nextSeason()));
-*/
+
 
     seasonTimer->start(5000);
 
